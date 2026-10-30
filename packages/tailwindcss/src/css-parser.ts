@@ -270,10 +270,7 @@ export function parse(input: string, opts?: ParseOptions) {
         //                  ^
         // }
         // ```
-        else if (
-          (peekChar === CLOSE_CURLY || input.length - 1 === j) &&
-          closingBracketStack.length === 0
-        ) {
+        else if (peekChar === CLOSE_CURLY && closingBracketStack.length === 0) {
           i = j - 1
           buffer += input.slice(start, j)
           break
@@ -292,6 +289,21 @@ export function parse(input: string, opts?: ParseOptions) {
             closingBracketStack = closingBracketStack.slice(0, -1)
           }
         }
+      }
+
+      // We reached the end of the input without finding a `;` or `}` that ends
+      // the custom property, which means that the rest of the input is part of
+      // the custom property.
+      //
+      // E.g.:
+      //
+      // ```css
+      // --custom: value
+      //                ^
+      // ```
+      if (buffer.length === 0) {
+        buffer = input.slice(start)
+        i = input.length
       }
 
       let declaration = parseDeclaration(buffer, colonIdx)
